@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: django
+    volumes:
+      - .:/django_docker
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "pip install -r /django_docker/requirements.txt && python /django_docker/manage.py migrate && python /django_docker/manage.py runserver"
+
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=newrootpassword
+      - MYSQL_DATABASE=docker_market_db
+      - MYSQL_USER=django_docker_user
+      - MYSQL_PASSWORD=newpassword
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
